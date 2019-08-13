@@ -1,0 +1,717 @@
+// 入口
+import config from './config'
+import util from './util'
+
+
+//设置refer
+// chrome.webRequest.onBeforeSendHeaders.addListener(
+//   function(details) {
+//     if (details.type === 'xmlhttprequest') {
+//       var exists = false;
+//       for (var i = 0; i < details.requestHeaders.length; ++i) {
+//         if (details.requestHeaders[i].name === 'Referer') {
+//           exists = true;
+//           details.requestHeaders[i].value = 'https://ehire.51job.com/Candidate/SearchResumeNew.aspx';
+//           break;
+//         }
+//       }
+
+//       if (!exists) {
+//         details.requestHeaders.push({
+//           name: 'Referer',
+//           value: 'https://ehire.51job.com/Candidate/SearchResumeNew.aspx'
+//         });
+//       }
+
+//       return {
+//         requestHeaders: details.requestHeaders
+//       };
+//     }
+//   }, {
+//     urls: ['https://ehire.51job.com/Candidate/SearchResumeNew.aspx']
+//   }, ["blocking", "requestHeaders", "extraHeaders"]
+// );
+// 
+// var request = require('request');
+// var fs = require('fs');
+var http = require('http');
+var cheerio = require('cheerio')
+// var jquery = require
+let darenPageUrl = [];
+//VSC 第二次V任务功能前缀
+let VSCpage = 1;
+let VSCpagesize = 20;
+let VSCtotalpage = -1;
+let VSCtoken = 'KE923jddudk3FYjWedkHH';
+let VSCtab;
+
+chrome.browserAction.onClicked.addListener(function(tab) {
+  main();
+});
+// chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+//   chrome.tabs.sendMessage(tabs[0].id, {greeting: "helloword"}, function(response) {
+//     console.log(123);
+//   });
+// });
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // if (request.greeting === "sendDarenPage") {
+  //   if (!darenPageUrl.includes(request.darenPageUrl)) {
+  //     darenPageUrl = [...darenPageUrl, request.darenPageUrl];
+  //   }
+  //   if (request.islast) {
+  //     //开始打开达人首页爬数据
+  //     console.log(`开始打开达人首页爬数据.共有${darenPageUrl.length}个达人`)
+  //     darenPageUrl.forEach((darenPage, ind) => {
+  //       chrome.tabs.getSelected(null, async function(tab) {
+  //         util.sleep(3000)
+  //         var _id = tab.id;
+  //         chrome.tabs.update(_id, {
+  //           'url': darenPage,
+  //           'selected': true
+  //         });
+  //         util.sleep(300)
+  //       });
+  //     })
+  //   }
+  //   sendResponse({
+  //     jj: 'kjdsjfd'
+  //   })
+  // }
+  // if (request.greeting == "postDarenData") {
+  //   $.ajax({
+  //     url: config.willbeServer + '/tb/v/syncVTaskDetail.wb',
+  //     type: 'post',
+  //     data: request.data,
+  //     success: function(res) {
+  //       console.log('post 达人首页数据 结果：' + res)
+  //     }
+  //   })
+  // }
+  // 
+  if (request.greeting == 'VSCmission') {
+    //抓取页面的信息
+    // getDarenMain('2662685830');
+  }
+   if (request.greeting == 'hello') {
+    // getDarenMain("123")
+    sendResponse({farewell: "goodbye"})
+    console.log(sendResponse.farewell)
+    console.log("ok")
+   }
+})
+
+
+// //获取抓取v任务的达人id
+// function getAllVTaskDarenIds(page) {
+//   let _time = Math.random() * (2000 - 200) + 200
+//   util.sleep(_time)
+//   var _page = page || 1;
+//   return new Promise(function(resolve, reject) {
+//     $.ajax({
+//       url: config.willbeServer + '/tb/v/getAllVTaskDarenIds.wb?page=' + _page + '&pageSize=500',
+//       beforeSend: function(XMLHttpRequest) {
+//         XMLHttpRequest.setRequestHeader("token", config.token);
+//       },
+//       success: function(res) {
+//         resolve(res);
+//       }
+//     })
+//   })
+// }
+
+
+// //获取所有未抓取达人数据的文章列表
+// function getDarenArticleUrl(page) {
+//   var _page = page || 1;
+//   return new Promise(function(resolve, reject) {
+//     $.ajax({
+//       url: `${config.willbeServer}/tb/front/getDarenArticleUrl.wb?page=${_page}&pageSize=20`,
+//       beforeSend: function(XMLHttpRequest) {
+//         XMLHttpRequest.setRequestHeader("token", config.token);
+//       },
+//       success: function(res) {
+//         resolve(res);
+//       }
+//     })
+//   })
+// }
+
+// async function main() {
+//   fronpageFunc();
+// }
+
+// async function fronpageFunc() {
+  //首页达人信息
+  // let pageOneArtList = [];
+  // let otherPageList = [];
+  // let articleList = [];
+  // let articleAutherPages = [];
+  // let articleUrles = await getDarenArticleUrl();
+  // articleList = [...articleList, ...articleUrles.result.list];
+  // //总页数大于1页做翻页处理
+  // if (articleUrles.result.maxPage > 1) {
+  //   console.log('turnPage')
+  //   for (let i = 2; i <= articleUrles.result.maxPage; i++) {
+  //     var pageData = await getDarenArticleUrl(i);
+  //     articleList = [...articleList, ...pageData.result.list];
+  //   }
+  // }
+  // //浏览器第一次刷新页面时，没法取得这页面的达人首页地址，加个一个第一项就可以 完整取得达人地址
+  // articleList.splice(1, 0, articleList[0]);
+
+  // articleList.forEach((art, ind) => {
+  //   // articleAutherPages = [...articleAutherPages, art.url];
+  //   chrome.tabs.getSelected(null, function(tab) {
+  //     util.sleep(3000)
+  //     var _id = tab.id;
+  //     chrome.tabs.update(_id, {
+  //       'url': art.url,
+  //       'selected': true
+  //     });
+  //     chrome.tabs.sendRequest(_id, {
+  //       greeting: "getArctilUrl",
+  //       isLast: articleList.length == ind + 1
+  //     }, function(response) {
+  //       // console.log('authorPageUrl',)
+  //     });
+  //   });
+  // })
+  // return;
+// }
+
+// async function vFunc() {
+//   //V任务
+//   // let darenIdList=[];
+//   var darenIds = await getAllVTaskDarenIds();
+
+//   darenIds.result.list.forEach(async (idItem, ind) => {
+//     let postParam = {};
+//     let darenrResult = null;
+//     let _introduction = ""; //自我简介
+//     await $.ajax({
+//       url: 'https://v.taobao.com/micromission/daren/daren_main_portalv3.do?userId=' + idItem.userId,
+//       success: function(result) {
+//         result = JSON.parse(result);
+//         darenrResult = Object.assign({}, result);
+//       }
+//     })
+//     if (darenrResult.data.desc) {
+//       let descObj = JSON.parse(darenrResult.data.desc);
+//       descObj.blocks.forEach((desc, ind) => {
+//         if (desc.text) {
+//           _introduction += desc.text
+//         }
+//       })
+//     }
+//     // console.log('darenrResult-----',darenrResult);
+//     postParam.darenId = idItem.userId;
+//     postParam.darenName = darenrResult.data.darenNick;
+//     postParam.fansCount = darenrResult.data.fansCount;
+//     postParam.agencyName = darenrResult.data.darenAgency.agencyName; //机构
+//     postParam.agencyUrl = 'https://v.taobao.com/v/home?spm=a21xh.11250901.0.0.14c46b6fNZot7a&userId=' + darenrResult.data.darenAgency.agencyID;
+//     postParam.vUrl = 'https://v.taobao.com/v/home/?spm=a21xh.8861523.801.1.5f024accJ0p9KH&userId=' + idItem.userId;
+//     postParam.scoreDarenCapacity = darenrResult.data.darenScore;
+//     postParam.orderTakingRate = darenrResult.data.darenMissionData.receiveRate + "%";
+//     postParam.orderTakingResponseTime = darenrResult.data.darenMissionData.responseTime;
+//     postParam.serviceTotalCustomer = darenrResult.data.darenMissionData.cooperateSellerCount;
+//     postParam.serviceTotalQuantity = darenrResult.data.darenMissionData.completeMission;
+//     postParam.serviceType = darenrResult.data.darenMissionData.servType;
+//     postParam.serviceDomain = darenrResult.data.userId;
+//     postParam.introduction = _introduction;
+//     postParam.identityType = '';
+//     postParam.serviceScore = darenrResult.data.darenMissionData.avgScore;
+//     postParam.orderTakingFinishRate = darenrResult.data.darenMissionData.completeRate + "%";
+//     await $.ajax({
+//       url: config.willbeServer + '/tb/v/syncVTaskDetail.wb',
+//       beforeSend: function(XMLHttpRequest) {
+//         XMLHttpRequest.setRequestHeader("token", config.token);
+//       },
+//       type: 'post',
+//       data: postParam,
+//       success: function(res) {
+//         console.log('post', res)
+//       }
+//     })
+//     util.sleep(Math.random() * (800 - 200) + 200);
+//   })
+//   return
+//   // darenIdList = [...darenIdList,...darenIds.result.list];
+
+//   //总页数大于1页做翻页处理
+  // if (darenIds.result.maxPage > 1) {
+  //   for (var i = 1; i <= darenIds.result.maxPage; i++) {
+  //     // for(var i=2; i<=20;i++){
+  //     var pageData = await getAllVTaskDarenIds(i);
+  //     pageData.result.list.forEach(async (idItem, ind) => {
+  //       let postParam = {};
+  //       let darenrResult = null
+  //       await $.ajax({
+  //         url: 'https://v.taobao.com/micromission/daren/daren_main_portalv3.do?userId=' + idItem.userId,
+  //         success: function(result) {
+  //           result = JSON.parse(result);
+  //           darenrResult = Object.assign({}, result);
+  //         }
+  //       })
+  //       postParam.darenId = idItem.userId;
+  //       postParam.darenName = darenrResult.data.darenNick;
+  //       postParam.fansCount = darenrResult.data.fansCount;
+  //       postParam.agencyName = darenrResult.data.darenAgency.agencyName; //机构
+  //       postParam.agencyUrl = 'https://v.taobao.com/v/home?spm=a21xh.11250901.0.0.14c46b6fNZot7a&userId=' + darenrResult.data.darenAgency.agencyID;
+  //       postParam.vUrl = '';
+  //       postParam.scoreDarenCapacity = darenrResult.data.darenScore;
+  //       postParam.orderTakingRate = darenrResult.data.darenMissionData.receiveRate + "%";
+  //       postParam.orderTakingResponseTime = darenrResult.data.darenMissionData.responseTime;
+  //       postParam.serviceTotalCustomer = darenrResult.data.darenMissionData.cooperateSellerCount;
+  //       postParam.serviceTotalQuantity = darenrResult.data.darenMissionData.completeMission;
+  //       postParam.serviceType = darenrResult.data.darenMissionData.servType;
+  //       postParam.serviceDomain = darenrResult.data.userId;
+  //       postParam.introduction = '';
+  //       postParam.identityType = '';
+  //       postParam.serviceScore = darenrResult.data.darenMissionData.avgScore;
+  //       postParam.orderTakingFinishRate = darenrResult.data.darenMissionData.completeRate + "%";
+  //       await $.ajax({
+  //         url: config.willbeServer + '/tb/v/syncVTaskDetail.wb',
+  //         beforeSend: function(XMLHttpRequest) {
+  //           XMLHttpRequest.setRequestHeader("token", config.token);
+  //         },
+  //         type: 'post',
+  //         data: postParam,
+  //         success: function(res) {
+  //           console.log('post', res)
+  //         }
+  //       })
+  //       // util.sleep(Math.random()*(2000-200)+200)
+  //       // console.log('postParam',postParam)
+  //     })
+  //     if (i == darenIds.result.maxPage) {
+  //       console.log('v task done, maxPage is ' + darenIds.result.maxPage)
+  //     }
+  //   }
+  // } else {
+  //   console.log('v task done, maxPage is 1')
+  // }
+
+
+// // VSC mission function
+// let getDarenId = (page = 1, pageSize = 20) => {
+//   return new Promise((resolve, reject) => {
+//     $.ajax({
+//       url: `${config.willbeServer}/tb/v/getAllVTaskDarenIds.wb`,
+//       headers: {
+//         token: VSCtoken
+//       },
+//       // async:false,
+//       data: {
+//         page,
+//         pageSize
+//       },
+//       success: function(data) {
+//         if (data.status == 0) {
+//           if (VSCtotalpage <= 0) {
+//             VSCtotalpage = data.result.maxPage
+//           }
+//           resolve(data);
+//         } else {
+//           VSCtotalpage = -1;
+//           reject(data.msg)
+//         }
+//       },
+//       erroe: function(data) {
+//         VSCtotalpage = -1;
+//         reject(data.msg)
+//       }
+//     })
+//   })
+// }
+let getDarenMain = darenId => {//51job
+  // console.log("开了");
+  var resumeList = [];
+  return new Promise((resolve, reject) => {
+    try {
+      $.ajax({
+        url: `https://ehire.51job.com/Candidate/SearchResumeNew.aspx`,
+         success(data) {
+            var $ = cheerio.load(data);
+            
+            var header = "https://ehire.51job.com";
+            var len = ($(".Common_list-table table tbody tr").length-1);
+            // var keyList =[]
+
+            $(".Common_list-table table tr").each((item, i) => {//获取简历的链接
+             if(item%2!=0){
+                var id = $(i).find("td").eq(1).find('a').attr('href');
+                var getUrl = header +id;
+                resumeList.push(getUrl);    
+               }   
+              })
+            // resumeList.push("https://ehire.51job.com/Candidate/ResumeView.aspx?hidUserID=468682478&hidEvents=23&pageCode=3&hidKey=45954645acf6b22a28ed3a3dd7da7a23")
+          getDarenInfo(resumeList);
+          sleep(Math.ceil(Math.random()*2000))
+        },
+        error(data) {
+            // resolve(null)
+        }
+      })
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+let getDarenInfo = darenId => {
+  console.log(77)
+
+  return new Promise((resolve, reject) => {
+    try {
+      console.log(darenId.length);//抓取简历的份数darenId.length
+      var personList = {resumeItem:{}}
+      for(var i = 0;i<darenId.length;i++){
+        var resume={res1:{},res2:{},res3:{},res4:{}}
+        var resume1 ={}
+        var resume2 ={}
+        var resume3 ={}
+        var resume4 ={personInfo: {},getyearInfo:{},jobWantedInfo:{},jobExprInfo:{},eduExprInfo:{},atschoolInfo:{},skillInfo:{}}
+        $.ajax({
+        url: darenId[i],
+        async:false,
+         success(data) {
+          
+                 var $ = cheerio.load(data);
+                 var allTab = $("#divResume table").eq(1).html();
+                 var box1 = $(allTab).find('table.box1');
+                 var box2 = $(allTab).find('table.box2');
+                 var box3 = $(allTab).find('table #divInfo');
+
+                 // var resume1 ={}
+                 resume1.img = $(box1).find('td').eq(0).find('img').attr('src')
+                 resume1.id = $(box1).find('td').eq(0).find('span').text().split(":")[1]
+                 resume1.workStatus = $(box1).find('td').eq(1).find('table tr').eq(1).find('td').eq(0).contents().filter(function(){return this.nodeType==3}).text()
+                 resume1.phone = $(box1).find('td').eq(1).find('table tr').eq(1).find('td').eq(1).contents().filter(function(){return this.nodeType==3}).text().replace(/\ +/g,"").replace(/[\r\n]/g,"")
+                 resume1.mail = $(box1).find('td').eq(1).find('table tr').eq(1).find('td').eq(2).find('.blue').eq(0).text().replace(/\ +/g,"").replace(/[\r\n]/g,"")
+                 resume1.sex = $(box1).find('td').eq(1).find('table tr').eq(2).text().split("|")[0].replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                 resume1.age = $(box1).find('td').eq(1).find('table tr').eq(2).text().split("|")[1].replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                 resume1.adress = $(box1).find('td').eq(1).find('table tr').eq(2).text().split("|")[2].replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                 resume1.experience = $(box1).find('td').eq(1).find('table tr').eq(2).text().split("|")[3].replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                 // console.log(resume1);
+                 resume.res1=resume1
+                  
+
+                 // var resume2 = {};
+                 resume2.recentWorkTime = $(box2).find('tr td table tr td.tb2').eq(0).find('table tr').eq(0).find('.normal').text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                 resume2.recentWorkName = $(box2).find('tr td table tr td.tb2').eq(0).find('table tr').eq(1).find('.txt2').text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                 resume2.recentWorkCompany = $(box2).find('tr td table tr td.tb2').eq(0).find('table tr').eq(2).find('.txt2').text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                 resume2.recentWorkIndstry = $(box2).find('tr td table tr td.tb2').eq(0).find('table tr').eq(3).find('.txt2').text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                 // console.log(resume2)
+                 resume.res2=resume2
+                 
+
+                 // var resume3 ={}
+                 resume3.eduPoss = $(box2).find('tr td table tr td.tb2').eq(1).find('table tr').eq(1).find('.txt2').text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                 resume3.eduSchool = $(box2).find('tr td table tr td.tb2').eq(1).find('table tr').eq(2).find('.txt2').text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                 resume3.eduBg = $(box2).find('tr td table tr td.tb2').eq(1).find('table tr').eq(3).find('.txt2').text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                 // console.log(resume3)
+                  resume.res3=resume3
+                  
+
+                 // resume4 = {personInfo: {},getyearInfo:{},jobWantedInfo:{},jobExprInfo:{},eduExprInfo:{},atschoolInfo:{},skillInfo:{}}
+                 var keylist1=["QQ号：","政治面貌：","身高:","户口/国籍：","婚姻状况：","家庭地址：","个人主页："]
+                 var proplist1=["QQ","zzmm","sg","hkgj","hyzk","jtdz","grzy"]
+
+                 var keylist2=["关键字：","期望薪资：","地点：","职能/职位：","行业：","到岗时间：","工作类型：","自我评价："]
+                 var proplist2=["keyword","qwxz","dd","znzw","hy","dgsj","gzlx","zwpj"]
+                 
+                 for(var i=0;i<$(box3).find('table.box').find('.plate1').length;i++){
+                  if($(box3).find('table.box').find('.plate1').eq(i).contents().filter(function(){return this.nodeType==3}).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")=="个人信息"){
+                    // console.log("personInfo")
+                      for (var j = 0; j < $(box3).find('table.box').eq(i).find('.tba').eq(0).find('.keys').length; j++) {
+                        var key =$(box3).find('table.box').eq(i).find('.tba').eq(0).find('.keys').eq(j).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                        keylist1.forEach(function(value,k){
+                        　　if(key==value){
+                              resume4.personInfo[proplist1[k]]=$(box3).find('table.box').eq(i).find('.tba').eq(0).find('.txt2').eq(j).text().replace(/[\r\n]/g,"").replace(/\ +/g,"") 
+                              // console.log(resume4.personInfo[proplist1[k]])
+                            }
+                        })
+                      }
+                    }
+                    else if($(box3).find('table.box').find('.plate1').eq(i).contents().filter(function(){return this.nodeType==3}).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")=="目前年收入："){
+                      // console.log("getyearInfo")
+                      resume4.getyearInfo["salary"]=$(box3).find('table.box').eq(i).find('.plate1').eq(0).find('.f16').eq(0).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")+$(box3).find('table.box').eq(i).find('.plate1').eq(0).find('.f12').eq(0).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                    }
+                    else if($(box3).find('table.box').find('.plate1').eq(i).contents().filter(function(){return this.nodeType==3}).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")=="求职意向"){
+ //                     console.log($(box3).find('table.box').eq(i).html())//内容为空，所以打印出来无数据
+                      for(var j = 0; j < $(box3).find('table.box').eq(i).find('.tba').eq(0).find('.keys').length; j++){
+                        var key =$(box3).find('table.box').eq(i).find('.tba').eq(0).find('.keys').eq(j).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                        keylist2.forEach(function(value,k){
+                          if (key==value){
+                            resume4.jobWantedInfo[proplist2[k]]=$(box3).find('table.box').eq(i).find('.tba').eq(0).find('.txt2').eq(j).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                            // console.log(resume4.jobWantedInfo[proplist2[k]])
+                          }
+                        })
+                      } 
+                    }
+                    else if($(box3).find('table.box').find('.plate1').eq(i).contents().filter(function(){return this.nodeType==3}).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")=="工作经验"){
+                      for(var j = 0; j < $(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.p15').length; j++){
+                        var p15 = $(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.p15').eq(j)
+
+                        var jobDescribe = {}
+                        jobDescribe.time = $(p15).find('tr').eq(0).find('.time').eq(0).text()
+                        jobDescribe.companyName = $(p15).find('tr').eq(0).find('.bold').eq(0).text()+$(p15).find('tr').eq(0).find('.gray').eq(0).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                        var firmNtype = $(p15).find('tr').eq(1).find('.rtbox').eq(0).text()
+                        jobDescribe.companyFirm = firmNtype.split("|")[0] //公司业务
+                        
+                        jobDescribe.companyType = firmNtype.split("|")[1]//公司类型
+                        jobDescribe.department = $(p15).find('tr').eq(2).find('.txt3').eq(0).text()
+                        jobDescribe.position =$(p15).find('tr').eq(2).find('.txt3').eq(1).text()
+                        jobDescribe.content = $(p15).find('tr').eq(3).find('.txt1').eq(0).text()
+                        resume4.jobExprInfo["joblist"+j]=jobDescribe
+                      } 
+                    }
+                    else if($(box3).find('table.box').find('.plate1').eq(i).contents().filter(function(){return this.nodeType==3}).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")=="教育经历"){
+                      for(var j = 0; j < $(box3).find('table.box').eq(i).find('.tba').eq(0).find('.p15').length; j++){
+                        var p15 = $(box3).find('table.box').eq(i).find('.tba').eq(0).find('.p15').eq(j)
+
+                        var eduDescribe = {}
+                        eduDescribe.time = $(p15).find('tr').eq(0).find('.time').eq(0).text()
+                        eduDescribe.schoolName = $(p15).find('tr').eq(0).find('.txt3').eq(0).text()
+                        eduDescribe.schoolType = $(p15).find('tr').eq(1).find('.tb1').eq(0).text().split("|")[0] //公司业务.contents().filter(function(){return this.nodeType==3})
+                        eduDescribe.departments = $(p15).find('tr').eq(1).find('.tb1').eq(0).text().split("|")[1] //所在院系
+                        eduDescribe.content = $(p15).find('tr').eq(2).find('.txt1').eq(0).text()
+                        resume4.eduExprInfo["edulist"+j]=eduDescribe
+                      } 
+                    }
+                    else if($(box3).find('table.box').find('.plate1').eq(i).contents().filter(function(){return this.nodeType==3}).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")=="在校情况"){
+                      // console.log($(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.tit').length)
+                      console.log($(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.tit').eq(0).text())
+                      var zxqk={xnry:{},zxzw:{}}
+                      if($(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.tit').eq(0).text()=="校内荣誉"){
+                        // console.log("xnry存在")
+                        for(var x = 0; x < $(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.tb3').length; x++){
+                          var tb3 = $(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.tb3').eq(x)
+                          var atschoDescribe = {}
+                          atschoDescribe.awardsTime = $(tb3).find('tr').eq(0).find('.time').eq(0).text()
+                          atschoDescribe.awardsName = $(tb3).find('tr').eq(0).find('.txt3').eq(0).text()+$(tb3).find('tr').eq(0).find('.rtbox').eq(0).find('span').eq(0).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")
+                          // resume4.atschoolInfo["edulist"+x]=atschoDescribe
+                          zxqk.xnry["xnrylist"+x]=atschoDescribe
+                        } 
+                        
+                      }
+                      if(($(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.tit').eq(0).text()=="校内职务")||($(box3).find('table.box').eq(i).find('.tit').eq(1).text()=="校内职务")){
+                        // console.log("xnzw存在")
+                        for(var y = 0; y < $(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.p15').length; y++){
+                          var p15 = $(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.p15').eq(y)
+                          var atschoDescribe2 = {}
+                          atschoDescribe2.zxzwTime = $(p15).find('tr').eq(0).find('.time').eq(0).text()
+                          atschoDescribe2.zxzwName = $(p15).find('tr').eq(0).find('.txt3').eq(0).text()
+                          atschoDescribe2.zxzwDesc = $(p15).find('tr').eq(1).find('.txt1').eq(0).text()
+                          zxqk.zxzw["zxzwlist"+y]=atschoDescribe2
+                          // resume4.atschoolInfo["edulist"+j]=atschoDescribe
+                        } 
+                        
+                      }
+                      // console.log(zxqk)
+                      resume4.atschoolInfo = zxqk
+                      // console.log(resume4.atschoolInfo)
+                      
+                    }
+
+                    else if($(box3).find('table.box').find('.plate1').eq(i).contents().filter(function(){return this.nodeType==3}).text().replace(/[\r\n]/g,"").replace(/\ +/g,"")=="技能特长"){
+                      // console.log("技能"+$(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.tit').length)
+                      var num = 0
+                      var skill={languge:{},ver:{},peixun:{}}
+                      var trLenght = $(box3).find('table.box').eq(i).find('.tbb').eq(0).children('table').eq(0).children('tbody').eq(0).children('tr')
+                      console.log("tr"+trLenght.length)
+                      if(($(trLenght).eq(num).find('.tit').eq(0).text()=="技能/语言")){
+                        for(var j=0;j<$(trLenght).eq(num+1).find('.skco').length;j++){
+                          var skillDescribe = {}
+                          skillDescribe.awardsTime = $(trLenght).eq(num+1).find('.txt3').eq(j).text()
+                          skillDescribe.awardsName = $(trLenght).eq(num+1).find('.skco').eq(j).text()
+                          skill.languge["langugelist"+j]=skillDescribe
+                        }
+                        num+=2 
+                        // console.log(skill.languge)
+                      }
+                      if(($(trLenght).eq(num).find('.tit').eq(0).text()=="证书")){
+                        for(var h = 0; h < $(trLenght).eq(num+1).find('.txt3').length; h++){
+                          var skillVer = {}
+                          skillVer.verTime = $(trLenght).eq(num+1).find('.time').eq(h).text()
+                          skillVer.verName = $(trLenght).eq(num+1).find('.txt3').eq(h).text()
+                          skill.ver["verlist"+h]=skillVer
+                        } 
+                      num+=2
+                        
+
+                        // console.log(skill.ver)
+                      }
+                      if(($(trLenght).eq(num).find('.tit').eq(0).text()=="培训经历")){
+                        // console.log(num)
+                        // console.log($(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.p15').length)
+                        for(var f = 0; f < $(trLenght).eq(num+1).find('.p15').length; f++){
+                          var skillPeixun = {}
+                          skillPeixun.peixunTime = $(trLenght).eq(num+1).find('.p15').eq(f).find('.time').eq(f).text()
+                          skillPeixun.peixunName = $(trLenght).eq(num+1).find('.p15').eq(f).find('.txt3').eq(f).text()
+                          
+                          for(var k=0;k<$(trLenght).eq(num+1).find('.p15').eq(f).find('.tb2').length;k++){
+                            if($(trLenght).eq(num+1).find('.p15').eq(f).find('.tb2').eq(k).find('.keys').eq(0)=="培训机构："){
+                              skillPeixun.peixunCompany = $(trLenght).eq(num+1).find('.tb2').eq(k).find('.txt2').eq(0)
+                            }
+                            if($(trLenght).eq(num+1).find('.p15').eq(f).find('.tb2').eq(k).find('.keys').eq(0)=="培训地点："){
+                              skillPeixun.peixunAdress = $(trLenght).eq(num+1).find('.tb2').eq(k).find('.txt2').eq(0)
+                            }
+                          }
+
+                          skillPeixun.peixunDesc = $(trLenght).eq(num+1).find('.p15').eq(f).find('.txt1').eq(f).text()
+
+                          skill.peixun["peixunlist"+f]=skillPeixun
+                        } 
+
+                        // console.log(skill.peixun)
+                      }
+                      resume4.skillInfo = skill                      
+                    }
+        
+                    else{}
+                  resume.res4=resume4
+                 }
+                 // console.log(resume)
+                  
+                 
+        },
+        error(data) {
+          console.log("bad")
+        }
+      })
+       personList.resumeItem["resumelist"+i]=resume
+       // console.log(personList)
+       sleep(Math.ceil(Math.random()*2000))
+      }
+    } catch (err) {
+      reject(err)
+    }
+    console.log(personList);
+  })
+// console.log(personList);
+}
+function sleep(numberMillis) {//睡眠函数
+  var now = new Date();
+   var exitTime = now.getTime() + numberMillis;
+     while (true) {    now = new Date();
+        if (now.getTime() > exitTime)   return; 
+            }}
+
+// let getDarenContent = (darenId, day = 7) => {
+//   return new Promise((resolve, reject) => {
+//     $.ajax({
+//       url: `https://v.taobao.com/micromission/GetDarenContentStatistic.do?userId=${darenId}&cycle=${day}&_ksTS=1548233873983_143`,
+//       // async:false,
+//       success(data) {
+//         data = JSON.parse(data); //jsonp 字符串
+//         if (data.status == 0) {
+//           resolve(data.data)
+//         } else {
+//           reject(data.msg)
+//         }
+//       },
+//       error(data) {
+//         reject(data.msg)
+//       }
+//     })
+//   })
+// }
+// let postVmission = (param, fasnObj, sevenDays, thirtyDays, ninetyDays, turnpage = false) => {
+//   $.ajax({
+//     url: `${config.willbeServer}/tb/v/syncVTaskDetail.wb`,
+//     type: 'post',
+//     async: false,
+//     headers: {
+//       token: VSCtoken,
+//       'Content-Type': 'application/x-www-form-urlencoded'
+//     },
+//     data: param,
+//     success(response) {
+//       // console.log(response)
+//     }
+//   })
+//   $.ajax({
+//     url: `${config.willbeServer}/tb/v/syncVTaskFans.wb`,
+//     type: 'post',
+//     async: false,
+//     headers: {
+//       token: VSCtoken,
+//       'Content-Type': 'application/json'
+//     },
+//     data: JSON.stringify(fasnObj),
+//     success(response) {
+//       // console.log(response)
+//     }
+//   })
+//   $.ajax({
+//     url: `${config.willbeServer}/tb/v/syncVTaskStat.wb`,
+//     type: 'post',
+//     async: false,
+//     headers: {
+//       token: VSCtoken,
+//       'Content-Type': 'application/x-www-form-urlencoded'
+//     },
+//     data: sevenDays,
+//     success(response) {
+//       // console.log(response)
+//     }
+//   })
+//   $.ajax({
+//     url: `${config.willbeServer}/tb/v/syncVTaskStat.wb`,
+//     type: 'post',
+//     async: false,
+//     headers: {
+//       token: VSCtoken,
+//       'Content-Type': 'application/x-www-form-urlencoded'
+//     },
+//     data: thirtyDays,
+//     success(response) {
+//       // console.log(response)
+//     }
+//   })
+//   $.ajax({
+//     url: `${config.willbeServer}/tb/v/syncVTaskStat.wb`,
+//     type: 'post',
+//     async: false,
+//     headers: {
+//       token: VSCtoken,
+//       'Content-Type': 'application/x-www-form-urlencoded'
+//     },
+//     data: ninetyDays,
+//     success(response) {
+//       // console.log('syncVTaskStat response', turnpage, VSCpage, VSCtotalpage)
+//     },
+//     error() {
+//       // console.log('skjdaldjlfkl')
+//     }
+//   })
+//   if (turnpage && VSCpage < VSCtotalpage) {
+//     VSCpage++;
+//     chrome.tabs.sendRequest(VSCtab, {
+//       greeting: "vm-turnpage",
+//       page: VSCpage
+//     })
+//   } else if (turnpage && VSCpage == VSCtotalpage) {
+//     VSCpage = 1;
+//     VSCtotalpage = -1;
+//   }
+// }
+// let getQryFans = darenId => {
+//   return new Promise((resolve, reject) => {
+//     $.ajax({
+//       url: `https://v.taobao.com/micromission/daren/qry_fans_portrait.do?userId=${darenId}&_ksTS=1548399407613_101`,
+//       // async:false,
+//       success(data) {
+//         data = JSON.parse(data);
+//         if (data.status == 0) {
+//           resolve(data.data.fansFeature)
+//         } else {
+//           reject(data.msg)
+//         }
+//       },
+//       error(data) {
+//         reject(data.msg)
+//       }
+//     })
+//   })
+// }

@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/src
+END
+config.js
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/src/config.js
+END
+content.js
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/src/content.js
+END
+util.js
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/src/util.js
+END
+eventPage.js
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/src/eventPage.js
+END

@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr
+END
+background.html
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/background.html
+END
+package.json
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/package.json
+END
+unnamed.patch
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/unnamed.patch
+END
+popup.html
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/popup.html
+END
+.babelrc
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/.babelrc
+END
+package-lock.json
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/package-lock.json
+END
+manifest.json
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/hr/!svn/ver/79/trunk/code/source/plugin/crx-hr/manifest.json
+END
