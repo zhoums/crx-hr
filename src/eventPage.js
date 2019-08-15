@@ -33,7 +33,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       let paramObj=null;
       for (let i of tab){
         if(i.url.includes("resume/detail?")){
-          util.sleep(1000)
+          util.sleep(2000)
           paramObj=util.formatUrlParam(i.url)
           chrome.tabs.sendRequest(i.id,{
             greeting:"resumeDetail",

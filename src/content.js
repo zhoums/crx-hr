@@ -1,4 +1,5 @@
 import util from './util'
+// localStorage.setItem("706007722-filter", '[{"filterId":-1}]');
 chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
     if (request.greeting == 'oprationInPage') {
@@ -7,24 +8,12 @@ chrome.extension.onRequest.addListener(
       location.reload()
     }
     if(request.greeting=="fetchResume"){
-      function todo(item){
-        console.log('kljdsfakldsj',item)
-        item.click();
-        chrome.runtime.sendMessage({
-          greeting:'getDetail'
-        })
-      }
-      let item= $("table.k-table .k-table__body").find("tr.resume-item__basic a");
-      //@param {number} item:indexof resume in page
-      if(item[0]){
-        todo(item[0])
-      }else{
 
-        util.sleep(300)
-        item= $("table.k-table .k-table__body").find("tr.resume-item__basic a");
-        todo(item[0])
-      }
-
+      let item= $("table.k-table .k-table__body").find("tr.resume-item__basic a")
+      item[0].click();
+      chrome.runtime.sendMessage({
+        greeting:'getDetail'
+      })
     }
     if(request.greeting=="resumeDetail"){
       let $resume=$("#resumeDetail");
@@ -36,14 +25,24 @@ chrome.extension.onRequest.addListener(
       for(let i of div){
         console.log(i)
         if($(i).hasClass("is-career-objective")){
-          console.log($(i).text())
           let cont = $(i).find(".resume-content__section-body .resume-content__property");
-          cont.children().forEach((item,i)=>{
-            
+          let txt="";
+          console.log(new Set(cont.children()))
+          Array.from(new Set(cont.children())).forEach((item,k)=>{
+            console.log("k",k,item)
+            if(k%2==0){
+              if(k!=0){
+                console.log('fadsfds',k)
+                txt+=("; "+$(item).text());
+              }else{
+                console.log('444444',k)
+                txt+=$(item).text()
+              }
+            }else{
+              txt+=(":"+$(item).text())
+            }
           })
-          console.log('cont',cont.children())
-          let _new = cont.filter(c=>c!=="" )
-          resumeFile.careerObjective=_new;
+          resumeFile.careerObjective=txt;
         }
       }
       console.log(resumeFile)
