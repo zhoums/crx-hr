@@ -3,9 +3,9 @@ import config from './config'
 import util from './util'
 import EventProxy from 'eventproxy'
 
-let codeLoaded=false;
 let ep = new EventProxy();
 let tabId;
+let detailTabId;
 let keyword=null;
 let keywordIndex=0;
 
@@ -15,7 +15,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       active: true,
       currentWindow: true
     }, function(tabs) {
-      console.log(tabs)
       if(tabId){
         oprationInBack(tabId);
         return;
@@ -27,6 +26,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         alert("请在浏览器中打开正确的页面！")
       }
     });
+  }
+  if (request.greeting == "getDetail"){
+    chrome.tabs.query({active:true},(tab)=>{
+      console.log(tab)
+      let paramObj=null;
+      for (let i of tab){
+        if(i.url.includes("resume/detail?")){
+          util.sleep(1000)
+          paramObj=util.formatUrlParam(i.url)
+          chrome.tabs.sendRequest(i.id,{
+            greeting:"resumeDetail",
+            resume_id:paramObj.resumeNo
+          })
+          break;
+        }
+      }
+    })
   }
 })
 
@@ -55,20 +71,29 @@ ep.tail("oneKeyword",oneKeyword => {
     //   keywordIndex=0;
     // }
   })
+  console.log('oprationInPage',oneKeyword,tabId)
   util.sleep(4000) //等待页面加载完成
   //抓取简历
   chrome.tabs.sendRequest(tabId,{
     greeting:'fetchResume'
   });
 })
+ep.tail("resumeDetail",tabid=>{
+  console.log('resumeDetail',tabId)
+  chrome.tabs.sendRequest(tabId,{
+    greeting:"resumeDetail"
+  })
+})
 
 let oprationInBack=(tabId)=>{
   chrome.tabs.get(tabId,(tab)=>{
     if(tab.url!="https://rd5.zhaopin.com/custom/search/result"){
-      chrome.tabs.update(tabId, {
-        'url': 'https://rd5.zhaopin.com/custom/search/result',
-        'selected': true
-      })
+      setTimeout(function(){
+        chrome.tabs.update(tabId, {
+          'url': 'https://rd5.zhaopin.com/custom/search/result',
+          'selected': true
+        })
+      },500)
     }
   })
   util.sleep(3000)//如果页面刷新，等待页面加载完成

@@ -58,5 +58,19 @@ export default {
     }else{// error in getKeyword
       eventproxy.emit('getKeyword',null)
     }
+  },
+  formatUrlParam:(url)=>{
+    console.log('adsljkf',url)
+    let param = url.substring(url.indexOf("?")+1);
+    let array = param.split("&")
+    let obj={};
+    for(let i of array){
+      obj[i.split("=")[0]]=i.split("=")[1];
+    }
+    return obj
+  },
+  today(){
+    let time=new Date();
+    return `${time.getFullYear()}-${time.getMonth()+1}-${time.getDate()}`
   }
 }
