@@ -69,8 +69,9 @@ export default {
     }
     return obj
   },
-  today(){
-    let time=new Date();
-    return `${time.getFullYear()}-${time.getMonth()+1}-${time.getDate()}`
+  //param:{时间戳} time
+  retrunDate(time){
+    let Otime=time?new Date(time):new Date();
+    return `${Otime.getFullYear()}-${Otime.getMonth()+1}-${Otime.getDate()}`
   }
 }

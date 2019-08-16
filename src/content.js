@@ -8,34 +8,44 @@ chrome.extension.onRequest.addListener(
       location.reload()
     }
     if(request.greeting=="fetchResume"){
-
+      util.sleep(2000)
+      console.log($("table.k-table .k-table__body"))
       let item= $("table.k-table .k-table__body").find("tr.resume-item__basic a")
-      item[0].click();
-      chrome.runtime.sendMessage({
-        greeting:'getDetail'
-      })
+      console.log(item,item.length)
+      if(item.length<=0){
+        util.sleep(1000)
+        item= $("table.k-table .k-table__body").find("tr.resume-item__basic a")
+      }
+      item[0].click();//打开详情页面
+
     }
     if(request.greeting=="resumeDetail"){
       let $resume=$("#resumeDetail");
       let div=$resume.find("div");
+      let header = $(".resume-content.is-mb-0 .resume-content__header").text();
+      let candidateWarp=$(".resume-content__candidate-basic");
+      let candidate = {
+        name:candidateWarp.find(".resume-content__candidate-name").text(),
+        age_workYears:candidateWarp.find(".resume-content__labels").text(),
+        address:candidateWarp.find(".resume-content__labels--sub").text()
+      };
+
       let resumeFile={
-        catchDate:util.today(),
-        resumeId:request.resume_id.split("_")[0]
+        headTxt:header,
+        catchDate:util.retrunDate(),
+        resumeId:request.resume_id.split("_")[0],
+        candidate,
       };
       for(let i of div){
-        console.log(i)
+        //careerObjective
         if($(i).hasClass("is-career-objective")){
           let cont = $(i).find(".resume-content__section-body .resume-content__property");
           let txt="";
-          console.log(new Set(cont.children()))
           Array.from(new Set(cont.children())).forEach((item,k)=>{
-            console.log("k",k,item)
             if(k%2==0){
               if(k!=0){
-                console.log('fadsfds',k)
                 txt+=("; "+$(item).text());
               }else{
-                console.log('444444',k)
                 txt+=$(item).text()
               }
             }else{
@@ -43,8 +53,47 @@ chrome.extension.onRequest.addListener(
             }
           })
           resumeFile.careerObjective=txt;
-        }
+        }else if($(i).hasClass("resume-content__section")){ //resume 正文内容
+          let objItemName = $(i).attr("data-bind").split(':')[1].split(".")[0].replace("()","");
+          let title=$(i).find(".resume-content__section-header").text().split(" ")[0];
+          let content=[];
+          resumeFile[objItemName]={title,content}
+          if(title){
+            let wrap = $(i).find(".resume-content__section-body");//详情内容wrap
+            if(wrap.children().length==0){
+              resumeFile[objItemName].content.push($.trim(wrap.text()))
+            }else{
+              let contList = new Set(wrap.find(".timeline__item"))
+              contList.forEach((contItem,key)=>{
+                resumeFile[objItemName].content.push($.trim($(contItem).text()))
+              })
+            }
+          }
+        }//resume 正文内容 end
       }
-      console.log(resumeFile)
+      chrome.runtime.sendMessage({
+        greeting:'sendResume',
+        resume:resumeFile
+      })
     }
 });
+
+$(function(){
+  console.log(location.href)
+  if(location.href.includes('rd5.zhaopin.com/resume/detail')){
+    console.log('jsdfaldsalklkl')
+    let item= $("table.k-table .k-table__body").find("tr.resume-item__basic a")
+    chrome.runtime.sendMessage({
+      greeting:'getDetail',
+      page:111111,
+      totalPage:100,
+      current:0,
+      length:item.length
+    })
+  }
+  if(location.href=="https://rd5.zhaopin.com/custom/search/result"){
+    chrome.runtime.sendMessage({
+      greeting:'triggerFetchResume'
+    })
+  }
+})

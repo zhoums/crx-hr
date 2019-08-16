@@ -8,6 +8,7 @@ let tabId;
 let detailTabId;
 let keyword=null;
 let keywordIndex=0;
+let refleshByPlug=false;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.greeting == "mission") {
@@ -28,12 +29,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
   }
   if (request.greeting == "getDetail"){
+    util.sleep(2000)
     chrome.tabs.query({active:true},(tab)=>{
-      console.log(tab)
       let paramObj=null;
       for (let i of tab){
         if(i.url.includes("resume/detail?")){
-          util.sleep(2000)
+          util.sleep(2000)//等待详情页加载完
           paramObj=util.formatUrlParam(i.url)
           chrome.tabs.sendRequest(i.id,{
             greeting:"resumeDetail",
@@ -43,6 +44,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
       }
     })
+  }
+  if (request.greeting == "sendResume"){
+    chrome.tabs.query({active:true,currentWindow: true},tab=>{
+      console.log(tab,'alsdk')
+      detailTabId=tab[0].id;
+    })
+    util.sleep(500)
+    console.log('sendResume',detailTabId)
+    console.log(request.resume)
+    chrome.tabs.remove(detailTabId)
+  }
+  if(request.greeting=="triggerFetchResume"){
+    if(!refleshByPlug)return;
+    console.log('triggerFetchResume')
+    //抓取简历
+    chrome.tabs.sendRequest(tabId,{
+      greeting:'fetchResume'
+    });
   }
 })
 
@@ -58,28 +77,28 @@ ep.tail("account", account => {
   }
 })
 ep.tail("oneKeyword",oneKeyword => {
+  console.log('oneKeyword',oneKeyword,tabId)
+  refleshByPlug=true;
   chrome.tabs.sendRequest(tabId,{
     greeting:'oprationInPage',
     keyword:oneKeyword
   },function(res){
     // keywordIndex++;//抓取完一个关健字后翻下一个
+    // console.log('keywordIndex',keywordIndex,keyword.key.length)
     // if(keywordIndex<keyword.key.length){
     //   setTimeout(function(){
+    //     console.log('oneKeyword again')
     //     ep.emit("oneKeyword",keyword.key[keywordIndex])//更换keyword
     //   },10000)
     // }else{
     //   keywordIndex=0;
     // }
+    // alert('llll')
   })
-  console.log('oprationInPage',oneKeyword,tabId)
-  util.sleep(4000) //等待页面加载完成
-  //抓取简历
-  chrome.tabs.sendRequest(tabId,{
-    greeting:'fetchResume'
-  });
+  // util.sleep(4000) //等待页面加载完成
+
 })
 ep.tail("resumeDetail",tabid=>{
-  console.log('resumeDetail',tabId)
   chrome.tabs.sendRequest(tabId,{
     greeting:"resumeDetail"
   })
