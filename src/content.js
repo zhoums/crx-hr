@@ -90,6 +90,9 @@ $(function(){
       current:0,
       length:item.length
     })
+    if(request.greeting=='changePage'){
+      console.log(99999)
+    }
   }
   if(location.href=="https://rd5.zhaopin.com/custom/search/result"){
     chrome.runtime.sendMessage({
@@ -97,3 +100,19 @@ $(function(){
     })
   }
 })
+$(function() {
+    if(document.getElementById("ctrlSerach_search_keyword_txt").value==""){
+      $("#ctrlSerach_search_keyword_txt").val("机械");
+      document.getElementById("ctrlSerach_search_submit").click();
+    }
+ })
+chrome.runtime.sendMessage({greeting: "nextPage"}, function(response) {
+   console.log(response.farewell)//接收eventpage传回来的数据进行操作
+   // var page = "pagerBottomNew_btnNum"+response.farewell
+   // console.log(page)
+   for (var i = 0; i < document.getElementsByClassName("Search_page-numble")[0].childNodes.length; i++) {
+     if(document.getElementsByClassName("Search_page-numble")[0].childNodes[i].title==response.farewell){
+        document.getElementsByClassName("Search_page-numble")[0].childNodes[i].click();
+     }
+   }
+ })
