@@ -9,9 +9,9 @@ let codeLoaded = false;
 let ep = new EventProxy();
 let tabId;
 let detailTabId;
-let keyword=null;
-let keywordIndex=0;
-let refleshByPlug=false;
+let keyword = null;
+let keywordIndex = 0;
+let refleshByPlug = false;
 
 let cj = new EventProxy();
 var tabId_51;
@@ -23,58 +23,74 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       active: true,
       currentWindow: true
     }, function(tabs) {
-      if(tabId){
+      if (tabId) {
         oprationInBack(tabId);
         return;
       }
       if (tabs[0].id >= 0) {
-        tabId = tabId||tabs[0].id;
+        tabId = tabId || tabs[0].id;
         oprationInBack(tabId);
-      }else{
+      } else {
         alert("请在浏览器中打开正确的页面！")
       }
     });
   }
-  if (request.greeting == "getDetail"){
+  if (request.greeting == "getDetail") {
     util.sleep(2000)
-    chrome.tabs.query({active:true},(tab)=>{
-      let paramObj=null;
-      for (let i of tab){
-        if(i.url.includes("resume/detail?")){
-          util.sleep(2000)//等待详情页加载完
-          paramObj=util.formatUrlParam(i.url)
-          chrome.tabs.sendRequest(i.id,{
-            greeting:"resumeDetail",
-            resume_id:paramObj.resumeNo
+    chrome.tabs.query({
+      active: true
+    }, (tab) => {
+      let paramObj = null;
+      for (let i of tab) {
+        if (i.url.includes("resume/detail?")) {
+          util.sleep(2000) //等待详情页加载完
+          paramObj = util.formatUrlParam(i.url)
+          chrome.tabs.sendRequest(i.id, {
+            greeting: "resumeDetail",
+            resume_id: paramObj.resumeNo
           })
           break;
         }
       }
     })
   }
-  if (request.greeting == "sendResume"){
-    util.sleep(5000)
-    chrome.tabs.query({active:true,currentWindow: true},tab=>{
-      console.log(tab,'alsdk')
-      // detailTabId=tab[0].id;
-      chrome.tabs.remove(tab[0].id)
+  if (request.greeting == "sendResume") {
+    let param = JSON.stringify(request.resume)
+    $.ajax({
+      url: `${config.willbeServer}/backfillData`,
+      type: 'post',
+      async: false,
+      data: {
+        code: "2",
+        data: param
+      },
+      complete(xhr, ts) {
+        chrome.tabs.query({
+          active: true,
+          currentWindow: true
+        }, tab => {
+          // detailTabId=tab[0].id;
+          chrome.tabs.remove(tab[0].id)
+        })
+      }
     })
+
   }
-  if(request.greeting=="triggerFetchResume"){
-    if(!refleshByPlug)return;
-    console.log('triggerFetchResume')
+  if (request.greeting == "triggerFetchResume") {
+    if (!refleshByPlug) return;
+    // console.log('triggerFetchResume')
     //抓取简历
-    chrome.tabs.sendRequest(tabId,{
-      greeting:'fetchResume',
-      index:0
-    },function(res){
-      setTimeout(()=>{
-        if(res.page<=res.totalPage&&res.itemIndex<res.totalItme){
-          let itemIndex = res.itemIndex+1
-          ep.emit("loopFetchResume",itemIndex)
+    chrome.tabs.sendRequest(tabId, {
+      greeting: 'fetchResume',
+      index: 0
+    }, function(res) {
+      setTimeout(() => {
+        if (res.page <= res.totalPage && res.itemIndex < res.totalItme) {
+          let itemIndex = res.itemIndex + 1
+          ep.emit("loopFetchResume", itemIndex)
         }
-        console.log(res)
-      },5000)
+        // console.log(res)
+      }, 5000)
     });
   }
   if (request.greeting == "cj_mission") {
@@ -96,86 +112,73 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     });
   }
-  if(request.greeting == "nextPage"){
-    sendResponse({farewell:getPageNum})
+  if (request.greeting == "nextPage") {
+    sendResponse({
+      farewell: getPageNum
+    })
   }
 })
 
 ep.tail("getKeyword", (getKeyword) => {
-  keyword=getKeyword;
-  ep.emit("oneKeyword",keyword.key[keywordIndex])
+  keyword = getKeyword;
+  ep.emit("oneKeyword", keyword.key[keywordIndex])
 })
 ep.tail("account", account => {
   // console.log(account)
   if (typeof account == "object") {
     util.getKeyword(ep);
   } else {
-    console(account)
+    console.log(account)
   }
 })
-ep.tail("oneKeyword",oneKeyword => {
-  console.log('oneKeyword',oneKeyword,tabId)
-  refleshByPlug=true;
-  chrome.tabs.sendRequest(tabId,{
-    greeting:'oprationInPage',
-    keyword:oneKeyword
-  },function(res){
-    // keywordIndex++;//抓取完一个关健字后翻下一个
-    // console.log('keywordIndex',keywordIndex,keyword.key.length)
-    // if(keywordIndex<keyword.key.length){
-    //   setTimeout(function(){
-    //     console.log('oneKeyword again')
-    //     ep.emit("oneKeyword",keyword.key[keywordIndex])//更换keyword
-    //   },10000)
-    // }else{
-    //   keywordIndex=0;
-    // }
-    // alert('llll')
-  })
+ep.tail("oneKeyword", oneKeyword => {
+  // console.log('oneKeyword', oneKeyword, tabId)
+  refleshByPlug = true;
+  chrome.tabs.sendRequest(tabId, {
+    greeting: 'oprationInPage',
+    keyword: oneKeyword
+  }, function(res) {})
   // util.sleep(4000) //等待页面加载完成
 
 })
-ep.tail("resumeDetail",tabid=>{
-  chrome.tabs.sendRequest(tabId,{
-    greeting:"resumeDetail"
+ep.tail("resumeDetail", tabid => {
+  chrome.tabs.sendRequest(tabId, {
+    greeting: "resumeDetail"
   })
 })
-ep.tail("loopFetchResume",(itemIndex)=>{
+ep.tail("loopFetchResume", (itemIndex) => {
   //抓取简历
-  chrome.tabs.sendRequest(tabId,{
-    greeting:'fetchResume',
-    index:itemIndex
-  },function(res){
-    setTimeout(()=>{
-      console.log(222)
-      if(res.page<=res.totalPage&&res.itemIndex<res.totalItme){
-        let itemIndex = res.itemIndex+1
-        ep.emit("loopFetchResume",itemIndex)
-      }else if(res.page<res.totalPage&&res.itemIndex==res.totalItme){
-        let page=res.page+1;
-        console.log(tabId,"tabId")
-        chrome.tabs.sendRequest(tabId,{
-          greeting:'resumeTurnpage',
+  chrome.tabs.sendRequest(tabId, {
+    greeting: 'fetchResume',
+    index: itemIndex
+  }, function(res) {
+    setTimeout(() => {
+      if (res.page <= res.totalPage && res.itemIndex < res.totalItme) {
+        let itemIndex = res.itemIndex + 1
+        ep.emit("loopFetchResume", itemIndex)
+      } else if (res.page < res.totalPage && res.itemIndex == res.totalItme) {
+        let page = res.page + 1;
+        chrome.tabs.sendRequest(tabId, {
+          greeting: 'resumeTurnpage',
           page
         })
       }
-      console.log(res)
-    },5000)
+    }, 5000)
   });
 })
 
-let oprationInBack=(tabId)=>{
-  chrome.tabs.get(tabId,(tab)=>{
-    if(tab.url!="https://rd5.zhaopin.com/custom/search/result"){
-      setTimeout(function(){
+let oprationInBack = (tabId) => {
+  chrome.tabs.get(tabId, (tab) => {
+    if (tab.url != "https://rd5.zhaopin.com/custom/search/result") {
+      setTimeout(function() {
         chrome.tabs.update(tabId, {
           'url': 'https://rd5.zhaopin.com/custom/search/result',
           'selected': true
         })
-      },500)
+      }, 500)
     }
   })
-  util.sleep(3000)//如果页面刷新，等待页面加载完成
+  util.sleep(3000) //如果页面刷新，等待页面加载完成
   util.getAccount(ep);
 }
 let oprationInBack_cj = (tabId) => {
@@ -197,16 +200,17 @@ cj.tail("info", info => {
 cj.tail("page", page => {
   console.log(88)
   console.log(page)
-  getPageNum=page
+  getPageNum = page
 })
-let getOneResume =(sendinfo)=>{
+let getOneResume = (sendinfo) => {
   // console.log(sendinfo)
-    $.ajax({
+  $.ajax({
     url: "http://ha-web.ittun.com/web/spider/backfillData",
     type: 'post',
     data: {
-      code:"1",
-      data:sendinfo},
+      code: "1",
+      data: sendinfo
+    },
     success(response) {
       console.log("response")
     }
@@ -333,7 +337,7 @@ let getDarenInfo = darenId => {
                 // console.log("personInfo")
                 for (var j = 0; j < $(box3).find('table.box').eq(i).find('.tba').eq(0).find('.keys').length; j++) {
                   var key = $(box3).find('table.box').eq(i).find('.tba').eq(0).find('.keys').eq(j).text().replace(/[\r\n]/g, "").replace(/\ +/g, "")
-                  keylist1.forEach(function(value, k) {　　
+                  keylist1.forEach(function(value, k) {
                     if (key == value) {
                       resume4.personInfo[proplist1[k]] = $(box3).find('table.box').eq(i).find('.tba').eq(0).find('.txt2').eq(j).text().replace(/[\r\n]/g, "").replace(/\ +/g, "")
                       // console.log(resume4.personInfo[proplist1[k]])
