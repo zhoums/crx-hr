@@ -3,12 +3,19 @@ import config from './config'
 import util from './util'
 import EventProxy from 'eventproxy'
 
+
+// var cheerio = require('cheerio')
+let codeLoaded = false;
 let ep = new EventProxy();
 let tabId;
 let detailTabId;
 let keyword=null;
 let keywordIndex=0;
 let refleshByPlug=false;
+
+let cj = new EventProxy();
+var tabId_51;
+var getPageNum;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.greeting == "mission") {
@@ -63,6 +70,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       greeting:'fetchResume'
     });
   }
+  if (request.greeting == "cj_mission") {
+    chrome.tabs.query({
+      active: true,
+      currentWindow: true
+    }, function(tabs) {
+      console.log(tabs)
+      if (tabId_51) {
+        oprationInBack_cj(tabId_51);
+        console.log(tabId_51)
+        return;
+      }
+      if (tabs[0].id >= 0) {
+        tabId_51 = tabId_51 || tabs[0].id;
+        oprationInBack_cj(tabId_51);
+      } else {
+        alert("请在浏览器中打开正确的页面！")
+      }
+    });
+  }
+  if(request.greeting == "nextPage"){
+    sendResponse({farewell:getPageNum})
+  }
 })
 
 ep.tail("getKeyword", (getKeyword) => {
@@ -70,10 +99,11 @@ ep.tail("getKeyword", (getKeyword) => {
   ep.emit("oneKeyword",keyword.key[keywordIndex])
 })
 ep.tail("account", account => {
+  // console.log(account)
   if (typeof account == "object") {
     util.getKeyword(ep);
   } else {
-    alert(account)
+    console(account)
   }
 })
 ep.tail("oneKeyword",oneKeyword => {
@@ -118,6 +148,40 @@ let oprationInBack=(tabId)=>{
   util.sleep(3000)//如果页面刷新，等待页面加载完成
   util.getAccount(ep);
 }
+let oprationInBack_cj = (tabId) => {
+  chrome.tabs.get(tabId, (tab) => {
+    if (tab.url != "https://ehire.51job.com/Candidate/SearchResumeNew.aspx") {
+      chrome.tabs.update(tabId, {
+        'url': 'https://ehire.51job.com/Candidate/SearchResumeNew.aspx',
+        'selected': true
+      })
+    }
+  })
+  util.sleep(3000) //如果页面刷新，等待页面加载完成
+  util.getResumeInfo(cj);
+}
+cj.tail("info", info => {
+  console.log(info)
+  getDarenInfo(info)
+})
+cj.tail("page", page => {
+  console.log(88)
+  console.log(page)
+  getPageNum=page
+})
+let getOneResume =(sendinfo)=>{
+  // console.log(sendinfo)
+    $.ajax({
+    url: "http://ha-web.ittun.com/web/spider/backfillData",
+    type: 'post',
+    data: {
+      code:"1",
+      data:sendinfo},
+    success(response) {
+      console.log("response")
+    }
+  })
+}
 
 let getDarenMain = darenId => { //51job
   // console.log("开了");
@@ -142,7 +206,7 @@ let getDarenMain = darenId => { //51job
           })
           // resumeList.push("https://ehire.51job.com/Candidate/ResumeView.aspx?hidUserID=468682478&hidEvents=23&pageCode=3&hidKey=45954645acf6b22a28ed3a3dd7da7a23")
           getDarenInfo(resumeList);
-          sleep(Math.ceil(Math.random() * 2000))
+          util.sleep(Math.ceil(Math.random() * 2000))
         },
         error(data) {
           // resolve(null)
@@ -156,7 +220,7 @@ let getDarenMain = darenId => { //51job
 let getDarenInfo = darenId => {
   return new Promise((resolve, reject) => {
     try {
-      console.log(darenId.length); //抓取简历的份数darenId.length
+      // console.log(darenId.length); //抓取简历的份数darenId.length
       var personList = {
         resumeItem: {}
       }
@@ -300,7 +364,7 @@ let getDarenInfo = darenId => {
                   return this.nodeType == 3
                 }).text().replace(/[\r\n]/g, "").replace(/\ +/g, "") == "在校情况") {
                 // console.log($(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.tit').length)
-                console.log($(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.tit').eq(0).text())
+                // console.log($(box3).find('table.box').eq(i).find('.tbb').eq(0).find('.tit').eq(0).text())
                 var zxqk = {
                   xnry: {},
                   zxzw: {}
@@ -345,7 +409,7 @@ let getDarenInfo = darenId => {
                   peixun: {}
                 }
                 var trLenght = $(box3).find('table.box').eq(i).find('.tbb').eq(0).children('table').eq(0).children('tbody').eq(0).children('tr')
-                console.log("tr" + trLenght.length)
+                // console.log("tr" + trLenght.length)
                 if (($(trLenght).eq(num).find('.tit').eq(0).text() == "技能/语言")) {
                   for (var j = 0; j < $(trLenght).eq(num + 1).find('.skco').length; j++) {
                     var skillDescribe = {}
@@ -396,9 +460,7 @@ let getDarenInfo = darenId => {
               } else {}
               resume.res4 = resume4
             }
-            // console.log(resume)
-
-
+            getOneResume(JSON.stringify(resume))
           },
           error(data) {
             console.log("bad")
@@ -406,12 +468,11 @@ let getDarenInfo = darenId => {
         })
         personList.resumeItem["resumelist" + i] = resume
         // console.log(personList)
-        sleep(Math.ceil(Math.random() * 2000))
+        util.sleep(Math.ceil(Math.random() * 2000))
       }
     } catch (err) {
       reject(err)
     }
-    console.log(personList);
+    // console.log(personList);//一整页数据
   })
-  // console.log(personList);
 }

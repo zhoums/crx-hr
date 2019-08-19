@@ -73,5 +73,39 @@ export default {
   retrunDate(time){
     let Otime=time?new Date(time):new Date();
     return `${Otime.getFullYear()}-${Otime.getMonth()+1}-${Otime.getDate()}`
-  }
+  },
+  getResumeInfo: (eventproxy) => {
+    var resumeListOnePageUrl=[]
+    var getFlag =0;
+    $.ajax({
+      url: 'https://ehire.51job.com/Candidate/SearchResumeNew.aspx',
+      success(res) {
+        // console.log('getResumeInfo', res)
+        $(res).find(".Common_list-table table tr").each((item, i) => { //获取简历的链接
+            if (item % 2 != 0) {
+              var reItem = "https://ehire.51job.com"+$(i).find("td").eq(1).find('a').attr('href')
+              resumeListOnePageUrl.push(reItem)
+               getFlag ++;
+               console.log(getFlag)
+               eventproxy.emit("page",getFlag)
+            }
+          })
+        console.log(9991)
+        eventproxy.emit('info', resumeListOnePageUrl)
+
+      }
+    })
+  },
+  // getKeyword: (eventproxy) => {
+  //   console.log('util.getKeyword')
+  //   let resKeyword = {
+  //     key: ["ue", "html5", "javascript"],
+  //     time: 5000
+  //   }
+  //   if (resKeyword) {
+  //     eventproxy.emit('getKeyword', resKeyword)
+  //   } else { // error in getKeyword
+  //     eventproxy.emit('getKeyword', null)
+  //   }
+  // }
 }

@@ -17,7 +17,6 @@ chrome.extension.onRequest.addListener(
         item= $("table.k-table .k-table__body").find("tr.resume-item__basic a")
       }
       item[0].click();//打开详情页面
-
     }
     if(request.greeting=="resumeDetail"){
       let $resume=$("#resumeDetail");
@@ -90,6 +89,9 @@ $(function(){
       current:0,
       length:item.length
     })
+    // if(request.greeting=='changePage'){
+    //   console.log(99999)
+    // }
   }
   if(location.href=="https://rd5.zhaopin.com/custom/search/result"){
     chrome.runtime.sendMessage({
@@ -97,3 +99,23 @@ $(function(){
     })
   }
 })
+
+//这里不要一进来就发起请求，会报错的，在你需要的页面才运行
+
+// $(function() {
+//     if(document.getElementById("ctrlSerach_search_keyword_txt").value==""){
+//       $("#ctrlSerach_search_keyword_txt").val("机械");
+//       document.getElementById("ctrlSerach_search_submit").click();
+//     }
+//  })
+
+// chrome.runtime.sendMessage({greeting: "nextPage"}, function(response) {
+//    console.log(response.farewell)//接收eventpage传回来的数据进行操作
+//    // var page = "pagerBottomNew_btnNum"+response.farewell
+//    // console.log(page)
+//    for (var i = 0; i < document.getElementsByClassName("Search_page-numble")[0].childNodes.length; i++) {
+//      if(document.getElementsByClassName("Search_page-numble")[0].childNodes[i].title==response.farewell){
+//         document.getElementsByClassName("Search_page-numble")[0].childNodes[i].click();
+//      }
+//    }
+//  })
