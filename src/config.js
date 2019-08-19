@@ -10,6 +10,4 @@ let config ={
     token:'KE923jddu#@(DFDJiw1dI$*FYHHHHH',
     willbeServer:willbeServer
 }
-// console.log(process.env.NODE_ENV,willbeServer)
-
 export default config;
