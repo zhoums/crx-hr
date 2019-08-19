@@ -8,15 +8,14 @@ chrome.extension.onRequest.addListener(
       location.reload()
     }
     if(request.greeting=="fetchResume"){
-      util.sleep(2000)
-      console.log($("table.k-table .k-table__body"))
-      let item= $("table.k-table .k-table__body").find("tr.resume-item__basic a")
-      console.log(item,item.length)
-      if(item.length<=0){
-        util.sleep(1000)
-        item= $("table.k-table .k-table__body").find("tr.resume-item__basic a")
-      }
-      item[0].click();//打开详情页面
+      let id=request.index||0;
+      setTimeout(function(){
+        let page = parseInt($(".k-pager .is-active").text());
+        let totalPage = parseInt($(".k-pagination__total").text().split(" ")[1])
+        let item= $("table.k-table .k-table__body").find("tr.resume-item__basic a")
+        sendResponse({page,totalPage,totalItme:item.length,itemIndex:id})
+        item[id].click();//打开详情页面
+      },3000)// wait page loaded
     }
     if(request.greeting=="resumeDetail"){
       let $resume=$("#resumeDetail");
@@ -74,6 +73,15 @@ chrome.extension.onRequest.addListener(
         greeting:'sendResume',
         resume:resumeFile
       })
+    }
+    if(request.greeting=="resumeTurnpage"){
+      let p=request.page;
+      $(".k-pager li:contains('"+p+"')")[0].click();
+      setTimeout(()=>{
+        chrome.runtime.sendMessage({
+          greeting:'triggerFetchResume'
+        })
+      },3000)
     }
 });
 

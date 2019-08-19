@@ -53,21 +53,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     })
   }
   if (request.greeting == "sendResume"){
+    util.sleep(5000)
     chrome.tabs.query({active:true,currentWindow: true},tab=>{
       console.log(tab,'alsdk')
-      detailTabId=tab[0].id;
+      // detailTabId=tab[0].id;
+      chrome.tabs.remove(tab[0].id)
     })
-    util.sleep(500)
-    console.log('sendResume',detailTabId)
-    console.log(request.resume)
-    chrome.tabs.remove(detailTabId)
   }
   if(request.greeting=="triggerFetchResume"){
     if(!refleshByPlug)return;
     console.log('triggerFetchResume')
     //抓取简历
     chrome.tabs.sendRequest(tabId,{
-      greeting:'fetchResume'
+      greeting:'fetchResume',
+      index:0
+    },function(res){
+      setTimeout(()=>{
+        if(res.page<=res.totalPage&&res.itemIndex<res.totalItme){
+          let itemIndex = res.itemIndex+1
+          ep.emit("loopFetchResume",itemIndex)
+        }
+        console.log(res)
+      },5000)
     });
   }
   if (request.greeting == "cj_mission") {
@@ -132,6 +139,29 @@ ep.tail("resumeDetail",tabid=>{
   chrome.tabs.sendRequest(tabId,{
     greeting:"resumeDetail"
   })
+})
+ep.tail("loopFetchResume",(itemIndex)=>{
+  //抓取简历
+  chrome.tabs.sendRequest(tabId,{
+    greeting:'fetchResume',
+    index:itemIndex
+  },function(res){
+    setTimeout(()=>{
+      console.log(222)
+      if(res.page<=res.totalPage&&res.itemIndex<res.totalItme){
+        let itemIndex = res.itemIndex+1
+        ep.emit("loopFetchResume",itemIndex)
+      }else if(res.page<res.totalPage&&res.itemIndex==res.totalItme){
+        let page=res.page+1;
+        console.log(tabId,"tabId")
+        chrome.tabs.sendRequest(tabId,{
+          greeting:'resumeTurnpage',
+          page
+        })
+      }
+      console.log(res)
+    },5000)
+  });
 })
 
 let oprationInBack=(tabId)=>{
